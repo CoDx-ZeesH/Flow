@@ -1,78 +1,93 @@
 import 'package:flutter/material.dart';
 
 // ─── SESSION STATE ENUM ───────────────────────────────────────────────────────
-// Use this everywhere instead of raw booleans.
-// It maps directly to your Focus, Trough, and Drift UI states.
+// Focus  → Blue  (normal deep work)
+// Trough → Amber (fatigue warning)
+// Drift  → Red   (critical — cognitive misalignment)
 enum SessionState {
-  focus,   // Normal: green ring, cool bg
-  trough,  // Fatigue warning: orange/copper ring, warm bg shift
-  drift,   // Critical: rose/wine ring, red-tinted bg shift
+  focus,
+  trough,
+  drift,
 }
 
 class FlowTheme {
   FlowTheme._();
 
-  // ─── LIGHT MODE PALETTE (Redesign Specs) ──────────────────────────────
-  static const Color bgLight = Color(0xFFEEF3EF);
-  static const Color surfaceLight = Color(0xFFF4F8F5);
-  static const Color elevatedLight = Color(0xFFFAFCFB);
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // LIGHT MODE — NBBS v2 Lite
+  // Neutral base, strong borders, blue identity, amber/red for states
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  static const Color primaryLight = Color(0xFF6B8F71);
-  static const Color primaryTintLight = Color(0xFFE6EFE8);
-  static const Color primaryStrongLight = Color(0xFF4F6F57);
+  // ─── BASE ────────────────────────────────────────────────────────────────
+  static const Color bgLight       = Color(0xFFF4F5F7);
+  static const Color surfaceLight  = Color(0xFFFFFFFF);
+  static const Color elevatedLight = Color(0xFFFAFAFA);
 
-  static const Color fatigueBgLight = Color(0xFFF6F0E8);
-  static const Color fatigueLight = Color(0xFFA67C52);
+  // ─── BORDERS ─────────────────────────────────────────────────────────────
+  // Full black for interactive objects (buttons, inputs).
+  // Soft gray for informational cards — prevents visual overload at density.
+  static const Color borderLight     = Color(0xFF000000); // interactive
+  static const Color borderSoftLight = Color(0xFFE5E7EB); // informational cards
 
-  static const Color driftBgLight = Color(0xFFF2E5E7);
-  static const Color driftLight = Color(0xFF7A2E3A);
+  // ─── FOCUS STATE (PRIMARY) ───────────────────────────────────────────────
+  static const Color focusLight      = Color(0xFF2563EB);
+  static const Color focusSoftLight  = Color(0xFFDBEAFE);
+  static const Color focusStrongLight= Color(0xFF1E40AF);
 
-  static const Color text1Light = Color(0xFF1A2E1F);
-  static const Color text2Light = Color(0xFF4A6350);
-  static const Color text3Light = Color(0xFF8A9E8D);
+  // ─── FATIGUE STATE (TROUGH) ──────────────────────────────────────────────
+  static const Color fatigueLight     = Color(0xFFF59E0B);
+  static const Color fatigueSoftLight = Color(0xFFFEF3C7);
 
-  static const Color borderLight = Color(0xFFD8E4DA);
+  // ─── DRIFT STATE (CRITICAL) ──────────────────────────────────────────────
+  static const Color driftLight     = Color(0xFFEF4444);
+  static const Color driftSoftLight = Color(0xFFFEE2E2);
 
-  // ─── DARK MODE PALETTE (Redesign Specs) ───────────────────────────────
-  static const Color bgDark = Color(0xFF161A18);
-  static const Color surfaceDark = Color(0xFF1E2421);
-  static const Color elevatedDark = Color(0xFF252E28);
+  // ─── TEXT ────────────────────────────────────────────────────────────────
+  static const Color text1Light = Color(0xFF111111);
+  static const Color text2Light = Color(0xFF666666);
+  static const Color text3Light = Color(0xFF9CA3AF);
 
-  static const Color primaryDark = Color(0xFF5A8060);
-  static const Color primaryTintDark = Color(0xFF1E3028);
-  static const Color primaryStrongDark = Color(0xFF7AAD82);
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // DARK MODE — Yin–Yang System
+  // Near-monochrome base, white borders for sharpness, color only for meaning
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  static const Color fatigueBgDark = Color(0xFF2A1E10);
-  static const Color fatigueDark = Color(0xFFC4845A);
+  // ─── BASE ────────────────────────────────────────────────────────────────
+  static const Color bgDark       = Color(0xFF0B0B0C);
+  static const Color surfaceDark  = Color(0xFF111113);
+  static const Color elevatedDark = Color(0xFF18181B);
 
-  static const Color driftBgDark = Color(0xFF2A1218);
-  static const Color driftDark = Color(0xFF9E3D4A);
+  // ─── BORDERS ─────────────────────────────────────────────────────────────
+  static const Color borderDark     = Color(0xFFFFFFFF); // interactive — full white
+  static const Color borderSoftDark = Color(0xFF27272A); // informational cards
 
-  static const Color text1Dark = Color(0xFFE8F0EA);
-  static const Color text2Dark = Color(0xFF8A9E8D);
-  static const Color text3Dark = Color(0xFF566658);
+  // ─── FOCUS STATE (PRIMARY) ───────────────────────────────────────────────
+  static const Color focusDark     = Color(0xFF3B82F6);
+  static const Color focusSoftDark = Color(0xFF1E3A8A);
 
-  static const Color borderDark = Color(0xFF2A342C);
+  // ─── FATIGUE STATE (TROUGH) ──────────────────────────────────────────────
+  static const Color fatigueDark     = Color(0xFFF59E0B);
+  static const Color fatigueSoftDark = Color(0xFF78350F);
 
-  // ─── SEMANTIC HELPERS ─────────────────────────────────────────────────────
+  // ─── DRIFT STATE (CRITICAL) ──────────────────────────────────────────────
+  static const Color driftDark     = Color(0xFFEF4444);
+  static const Color driftSoftDark = Color(0xFF7F1D1D);
 
-  static Color pageBackground(BuildContext context, SessionState state) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    switch (state) {
-      case SessionState.focus:
-        return isDark ? bgDark : bgLight;
-      case SessionState.trough:
-        return isDark ? fatigueBgDark : fatigueBgLight;
-      case SessionState.drift:
-        return isDark ? driftBgDark : driftBgLight;
-    }
-  }
+  // ─── TEXT ────────────────────────────────────────────────────────────────
+  static const Color text1Dark = Color(0xFFF4F4F5);
+  static const Color text2Dark = Color(0xFFA1A1AA);
+  static const Color text3Dark = Color(0xFF71717A);
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // SEMANTIC HELPERS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /// Primary accent color for a given cognitive state.
   static Color stateColor(BuildContext context, SessionState state) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (state) {
       case SessionState.focus:
-        return isDark ? primaryDark : primaryLight;
+        return isDark ? focusDark : focusLight;
       case SessionState.trough:
         return isDark ? fatigueDark : fatigueLight;
       case SessionState.drift:
@@ -80,183 +95,284 @@ class FlowTheme {
     }
   }
 
+  /// Soft tint color for a given state (backgrounds, chips, fills).
+  static Color stateSoftColor(BuildContext context, SessionState state) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    switch (state) {
+      case SessionState.focus:
+        return isDark ? focusSoftDark : focusSoftLight;
+      case SessionState.trough:
+        return isDark ? fatigueSoftDark : fatigueSoftLight;
+      case SessionState.drift:
+        return isDark ? driftSoftDark : driftSoftLight;
+    }
+  }
+
+  /// Full page background — shifts subtly on trough/drift to signal state.
+  static Color pageBackground(BuildContext context, SessionState state) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    switch (state) {
+      case SessionState.focus:
+        return isDark ? bgDark : bgLight;
+      case SessionState.trough:
+        return isDark ? fatigueSoftDark : fatigueSoftLight;
+      case SessionState.drift:
+        return isDark ? driftSoftDark : driftSoftLight;
+    }
+  }
+
+  /// Ring track (background arc) for the FocusRing widget.
   static Color ringTrackColor(BuildContext context, SessionState state) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (state) {
       case SessionState.focus:
-        return isDark ? borderDark : borderLight;
+        return isDark ? borderSoftDark : borderSoftLight;
       case SessionState.trough:
-        return isDark ? fatigueBgDark : fatigueBgLight;
+        return isDark ? fatigueSoftDark : fatigueSoftLight;
       case SessionState.drift:
-        return isDark ? driftBgDark : driftBgLight; // Using standard tint
+        return isDark ? driftSoftDark : driftSoftLight;
     }
   }
 
-  // ─── PAGE TRANSITIONS ─────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // PAGE TRANSITIONS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   static const PageTransitionsTheme _fluidTransitions = PageTransitionsTheme(
     builders: {
       TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
-      TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
-      TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+      TargetPlatform.macOS:   FadeUpwardsPageTransitionsBuilder(),
+      TargetPlatform.linux:   FadeUpwardsPageTransitionsBuilder(),
     },
   );
 
-  // ─── LIGHT THEME BUILDER ──────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // LIGHT THEME
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: bgLight,
-      primaryColor: primaryLight,
+      primaryColor: focusLight,
       cardColor: surfaceLight,
-      dividerColor: borderLight,
-      fontFamily: 'Sora', // Main font
+      dividerColor: borderSoftLight,
+      fontFamily: 'Inter',
       pageTransitionsTheme: _fluidTransitions,
+
       colorScheme: const ColorScheme.light(
-        primary: primaryLight,
-        primaryContainer: primaryTintLight,
-        secondary: fatigueLight,
-        secondaryContainer: fatigueBgLight,
-        error: driftLight,
-        errorContainer: driftBgLight,
-        surface: surfaceLight,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
-        onError: Colors.white,
-        onSurface: text1Light,
+        primary:            focusLight,
+        primaryContainer:   focusSoftLight,
+        secondary:          fatigueLight,
+        secondaryContainer: fatigueSoftLight,
+        error:              driftLight,
+        errorContainer:     driftSoftLight,
+        surface:            surfaceLight,
+        onPrimary:          Colors.white,
+        onSecondary:        Colors.white,
+        onError:            Colors.white,
+        onSurface:          text1Light,
       ),
+
       textTheme: const TextTheme(
-        // Big numbers
-        displayLarge: TextStyle(color: text1Light, fontWeight: FontWeight.w800, fontSize: 56, letterSpacing: -2.0),
-        displayMedium: TextStyle(color: text1Light, fontWeight: FontWeight.w800, fontSize: 40, letterSpacing: -2.0),
-        
-        // Titles
-        headlineLarge: TextStyle(color: text1Light, fontWeight: FontWeight.w700, fontSize: 24, letterSpacing: -0.5),
-        headlineMedium: TextStyle(color: text1Light, fontWeight: FontWeight.w700, fontSize: 18),
-        headlineSmall: TextStyle(color: text1Light, fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: -0.2), // Section titles
-        
-        // Body text
-        bodyLarge: TextStyle(color: text1Light, fontSize: 15, fontWeight: FontWeight.w500),
+        // ── Big numbers (DM Mono — telemetry, timers)
+        displayLarge:  TextStyle(fontFamily: 'DM Mono', color: text1Light, fontWeight: FontWeight.w800, fontSize: 56, letterSpacing: -2.0),
+        displayMedium: TextStyle(fontFamily: 'DM Mono', color: text1Light, fontWeight: FontWeight.w800, fontSize: 40, letterSpacing: -1.5),
+
+        // ── Headings (Inter)
+        headlineLarge:  TextStyle(color: text1Light, fontWeight: FontWeight.w700, fontSize: 24, letterSpacing: -0.5),
+        headlineMedium: TextStyle(color: text1Light, fontWeight: FontWeight.w700, fontSize: 18, letterSpacing: -0.3),
+        headlineSmall:  TextStyle(color: text1Light, fontWeight: FontWeight.w700, fontSize: 14, letterSpacing: -0.1),
+
+        // ── Body (Inter)
+        bodyLarge:  TextStyle(color: text1Light, fontSize: 15, fontWeight: FontWeight.w500),
         bodyMedium: TextStyle(color: text2Light, fontSize: 13, fontWeight: FontWeight.w400),
-        bodySmall: TextStyle(color: text3Light, fontSize: 11, fontWeight: FontWeight.w400),
-        
-        // Labels & Monospace (DM Mono)
-        labelLarge: TextStyle(fontFamily: 'DM Mono', color: text2Light, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.02), // Badges
-        labelMedium: TextStyle(fontFamily: 'DM Mono', color: text3Light, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.0), // Card Labels
-        labelSmall: TextStyle(fontFamily: 'DM Mono', color: text3Light, fontSize: 9, fontWeight: FontWeight.w500, letterSpacing: 0.8),
+        bodySmall:  TextStyle(color: text3Light, fontSize: 11, fontWeight: FontWeight.w400),
+
+        // ── Labels (DM Mono — badges, card labels, data readouts)
+        labelLarge:  TextStyle(fontFamily: 'DM Mono', color: text2Light, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+        labelMedium: TextStyle(fontFamily: 'DM Mono', color: text3Light, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.0),
+        labelSmall:  TextStyle(fontFamily: 'DM Mono', color: text3Light, fontSize: 9,  fontWeight: FontWeight.w500, letterSpacing: 0.8),
       ),
+
+      // ── Informational cards: soft gray border (not overwhelming at density)
       cardTheme: CardThemeData(
         color: surfaceLight,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28), // --radius-lg from redesign
-          side: const BorderSide(color: borderLight, width: 1),
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: borderSoftLight, width: 1.5),
         ),
         margin: EdgeInsets.zero,
       ),
+
+      // ── Inputs: hard black border (interactive = obvious)
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: elevatedLight,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: borderLight, width: 2),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: borderLight, width: 2),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: primaryLight, width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: focusLight, width: 2.5),
         ),
-        hintStyle: const TextStyle(color: text3Light, fontSize: 15, fontFamily: 'Sora'),
+        hintStyle: const TextStyle(
+          color: text3Light, fontSize: 14, fontFamily: 'Inter',
+        ),
       ),
+
+      // ── Buttons: hard black border, brutalist shape
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryLight,
+          backgroundColor: focusLight,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)), // Pill shape
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: borderLight, width: 2),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(fontFamily: 'Sora', fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600,
+          ),
         ),
       ),
-      dividerTheme: const DividerThemeData(color: borderLight, thickness: 1, space: 8),
+
+      // ── Text buttons (secondary actions)
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: focusLight,
+          textStyle: const TextStyle(
+            fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+
+      dividerTheme: const DividerThemeData(
+        color: borderSoftLight, thickness: 1, space: 8,
+      ),
     );
   }
 
-  // ─── DARK THEME BUILDER ───────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // DARK THEME
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: bgDark,
-      primaryColor: primaryDark,
+      primaryColor: focusDark,
       cardColor: surfaceDark,
-      dividerColor: borderDark,
-      fontFamily: 'Sora',
+      dividerColor: borderSoftDark,
+      fontFamily: 'Inter',
       pageTransitionsTheme: _fluidTransitions,
+
       colorScheme: const ColorScheme.dark(
-        primary: primaryDark,
-        primaryContainer: primaryTintDark,
-        secondary: fatigueDark,
-        secondaryContainer: fatigueBgDark,
-        error: driftDark,
-        errorContainer: driftBgDark,
-        surface: surfaceDark,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
-        onError: Colors.white,
-        onSurface: text1Dark,
+        primary:            focusDark,
+        primaryContainer:   focusSoftDark,
+        secondary:          fatigueDark,
+        secondaryContainer: fatigueSoftDark,
+        error:              driftDark,
+        errorContainer:     driftSoftDark,
+        surface:            surfaceDark,
+        onPrimary:          Colors.white,
+        onSecondary:        Colors.white,
+        onError:            Colors.white,
+        onSurface:          text1Dark,
       ),
+
       textTheme: const TextTheme(
-        displayLarge: TextStyle(color: text1Dark, fontWeight: FontWeight.w800, fontSize: 56, letterSpacing: -2.0),
-        displayMedium: TextStyle(color: text1Dark, fontWeight: FontWeight.w800, fontSize: 40, letterSpacing: -2.0),
-        headlineLarge: TextStyle(color: text1Dark, fontWeight: FontWeight.w700, fontSize: 24, letterSpacing: -0.5),
-        headlineMedium: TextStyle(color: text1Dark, fontWeight: FontWeight.w700, fontSize: 18),
-        headlineSmall: TextStyle(color: text1Dark, fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: -0.2),
-        bodyLarge: TextStyle(color: text1Dark, fontSize: 15, fontWeight: FontWeight.w500),
+        // ── Big numbers (DM Mono)
+        displayLarge:  TextStyle(fontFamily: 'DM Mono', color: text1Dark, fontWeight: FontWeight.w800, fontSize: 56, letterSpacing: -2.0),
+        displayMedium: TextStyle(fontFamily: 'DM Mono', color: text1Dark, fontWeight: FontWeight.w800, fontSize: 40, letterSpacing: -1.5),
+
+        // ── Headings (Inter)
+        headlineLarge:  TextStyle(color: text1Dark, fontWeight: FontWeight.w700, fontSize: 24, letterSpacing: -0.5),
+        headlineMedium: TextStyle(color: text1Dark, fontWeight: FontWeight.w700, fontSize: 18, letterSpacing: -0.3),
+        headlineSmall:  TextStyle(color: text1Dark, fontWeight: FontWeight.w700, fontSize: 14, letterSpacing: -0.1),
+
+        // ── Body (Inter)
+        bodyLarge:  TextStyle(color: text1Dark, fontSize: 15, fontWeight: FontWeight.w500),
         bodyMedium: TextStyle(color: text2Dark, fontSize: 13, fontWeight: FontWeight.w400),
-        bodySmall: TextStyle(color: text3Dark, fontSize: 11, fontWeight: FontWeight.w400),
-        labelLarge: TextStyle(fontFamily: 'DM Mono', color: text2Dark, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.02),
+        bodySmall:  TextStyle(color: text3Dark, fontSize: 11, fontWeight: FontWeight.w400),
+
+        // ── Labels (DM Mono)
+        labelLarge:  TextStyle(fontFamily: 'DM Mono', color: text2Dark, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5),
         labelMedium: TextStyle(fontFamily: 'DM Mono', color: text3Dark, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.0),
-        labelSmall: TextStyle(fontFamily: 'DM Mono', color: text3Dark, fontSize: 9, fontWeight: FontWeight.w500, letterSpacing: 0.8),
+        labelSmall:  TextStyle(fontFamily: 'DM Mono', color: text3Dark, fontSize: 9,  fontWeight: FontWeight.w500, letterSpacing: 0.8),
       ),
+
+      // ── Informational cards: soft dark border
       cardTheme: CardThemeData(
         color: surfaceDark,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-          side: const BorderSide(color: borderDark, width: 1),
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: borderSoftDark, width: 1.5),
         ),
         margin: EdgeInsets.zero,
       ),
+
+      // ── Inputs: hard white border
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: elevatedDark,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: borderDark, width: 2),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: borderDark, width: 2),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: primaryDark, width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: focusDark, width: 2.5),
         ),
-        hintStyle: const TextStyle(color: text3Dark, fontSize: 15, fontFamily: 'Sora'),
+        hintStyle: const TextStyle(
+          color: text3Dark, fontSize: 14, fontFamily: 'Inter',
+        ),
       ),
+
+      // ── Buttons: hard white border
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryDark,
+          backgroundColor: focusDark,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: borderDark, width: 2),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(fontFamily: 'Sora', fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600,
+          ),
         ),
       ),
-      dividerTheme: const DividerThemeData(color: borderDark, thickness: 1, space: 8),
+
+      // ── Text buttons
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: focusDark,
+          textStyle: const TextStyle(
+            fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+
+      dividerTheme: const DividerThemeData(
+        color: borderSoftDark, thickness: 1, space: 8,
+      ),
     );
   }
 }

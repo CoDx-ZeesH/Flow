@@ -1,3 +1,15 @@
+// lib/screens/intent_screen.dart
+//
+// NBBS v2 Lite rebuild:
+//   ✅ Bento two-column layout preserved, card radius → 12px
+//   ✅ Task chips: pill → square, hard border on selected
+//   ✅ Intent textarea: hard 2px border, square corners
+//   ✅ Duration + difficulty selectors: hard border selected state
+//   ✅ Optimal window hero: gradient → solid primary fill + hard border
+//   ✅ Right column info cards: soft-border _IntentCard
+//   ✅ CTA: solid primary fill, hard 2px border, square 12px radius
+//   ✅ All AppState wiring preserved
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/app_state.dart';
@@ -12,10 +24,10 @@ class IntentScreen extends StatefulWidget {
 }
 
 class _IntentScreenState extends State<IntentScreen> {
-  String _selectedTask = 'Deep work';
-  String _selectedDuration = '50m';
+  String _selectedTask       = 'Deep work';
+  String _selectedDuration   = '50m';
   String _selectedDifficulty = 'moderate';
-  final _intentController = TextEditingController();
+  final _intentController    = TextEditingController();
 
   final List<Map<String, String>> _taskChips = [
     {'emoji': '🧠', 'label': 'Deep work'},
@@ -36,10 +48,10 @@ class _IntentScreenState extends State<IntentScreen> {
 
   int get _durationMinutes {
     switch (_selectedDuration) {
-      case '25m':    return 25;
-      case '50m':    return 50;
-      case '90m':    return 90;
-      default:       return 50;
+      case '25m': return 25;
+      case '50m': return 50;
+      case '90m': return 90;
+      default:    return 50;
     }
   }
 
@@ -54,74 +66,111 @@ class _IntentScreenState extends State<IntentScreen> {
         ? _intentController.text.trim()
         : _selectedTask;
 
-    // Store intent in AppState before navigating — API teammate reads these
     context.read<AppState>().prepareSession(
-      task: task,
-      difficulty: _selectedDifficulty,
+      task:        task,
+      difficulty:  _selectedDifficulty,
       durationMin: _durationMinutes,
     );
 
-    // API teammate: call POST /session/start here, then call appState.startSession(sessionId)
-    // For now, MainLayout's onStartSession handles the optimistic routing.
+    // API teammate: call POST /session/start here, then appState.startSession(sessionId)
     widget.onStartSession?.call();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme  = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTopBar(context),
+            // ── Top bar ────────────────────────────────────────────────────
+            Text(
+              'STARTING A SESSION',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: isDark ? FlowTheme.text3Dark : FlowTheme.text3Light,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text('What will you focus on?',
+                style: theme.textTheme.headlineLarge),
             const SizedBox(height: 24),
+
+            // ── Bento two-column layout ────────────────────────────────────
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // LEFT COLUMN — form
                 Expanded(
                   flex: 3,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildTaskTypeCard(context),
-                      const SizedBox(height: 16),
-                      _buildIntentDeclarationCard(context),
-                      const SizedBox(height: 16),
-                      _buildDurationCard(context),
-                      const SizedBox(height: 16),
-                      _buildDifficultyCard(context),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _handleBeginSession,
-                        style: ElevatedButton.styleFrom(
+                      _buildTaskTypeCard(context, theme, isDark),
+                      const SizedBox(height: 14),
+                      _buildIntentCard(context, theme, isDark),
+                      const SizedBox(height: 14),
+                      _buildDurationCard(context, theme, isDark),
+                      const SizedBox(height: 14),
+                      _buildDifficultyCard(context, theme, isDark),
+                      const SizedBox(height: 20),
+
+                      // ── CTA — NBBS: solid primary, hard 2px border ──────
+                      GestureDetector(
+                        onTap: _handleBeginSession,
+                        child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 20),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.play_circle_fill_rounded, size: 22),
-                            SizedBox(width: 8),
-                            Text('Begin focus session', style: TextStyle(fontSize: 16)),
-                          ],
+                          decoration: BoxDecoration(
+                            color: theme.primaryColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark
+                                  ? FlowTheme.borderDark
+                                  : FlowTheme.borderLight,
+                              width: 2,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.play_circle_fill_rounded,
+                                  size: 20, color: Colors.white),
+                              SizedBox(width: 10),
+                              Text(
+                                'Begin focus session',
+                                style: TextStyle(
+                                  color:      Colors.white,
+                                  fontSize:   15,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
+
                 const SizedBox(width: 14),
+
+                // RIGHT COLUMN — context cards
                 Expanded(
                   flex: 2,
                   child: Column(
                     children: [
-                      _buildOptimalWindowHero(context),
+                      _buildOptimalWindowHero(context, theme, isDark),
                       const SizedBox(height: 12),
-                      _buildCalendarCheckCard(context),
+                      _buildCalendarCheckCard(context, theme, isDark),
                       const SizedBox(height: 12),
-                      _buildPatternInsightCard(context),
+                      _buildPatternInsightCard(context, theme, isDark),
                       const SizedBox(height: 12),
-                      _buildRecentIntentionsCard(context),
+                      _buildRecentIntentionsCard(context, theme, isDark),
                     ],
                   ),
                 ),
@@ -133,270 +182,499 @@ class _IntentScreenState extends State<IntentScreen> {
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('STARTING A SESSION',
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: isDark ? FlowTheme.text3Dark : FlowTheme.text3Light)),
-        const SizedBox(height: 2),
-        Text('What will you focus on?', style: theme.textTheme.headlineLarge),
-      ],
-    );
-  }
+  // ── TASK TYPE CARD ────────────────────────────────────────────────────────
 
-  Widget _buildTaskTypeCard(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Task type', style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8, runSpacing: 8,
-              children: _taskChips.map((chip) => _buildChip(
-                context,
-                emoji: chip['emoji']!,
-                label: chip['label']!,
-                isSelected: _selectedTask == chip['label'],
-                onTap: () => setState(() => _selectedTask = chip['label']!),
-              )).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIntentDeclarationCard(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Declare your intention', style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _intentController,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                hintText: 'e.g. Fix the JWT token refresh bug in the auth module and write unit tests…',
-                contentPadding: EdgeInsets.all(20),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text('Be specific — FLOW will track drift against this intent.',
-              style: Theme.of(context).textTheme.labelSmall),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDurationCard(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Target duration', style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 12),
-            Row(
-              children: _durations.map((dur) {
-                final isSelected = _selectedDuration == dur;
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(right: dur != _durations.last ? 8.0 : 0),
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedDuration = dur),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).scaffoldBackgroundColor,
-                          border: Border.all(
-                            color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).dividerColor,
-                            width: 1.5,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(dur,
-                          style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w700,
-                            color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).textTheme.bodyMedium?.color,
-                          )),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDifficultyCard(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Cognitive demand', style: theme.textTheme.labelMedium),
-            const SizedBox(height: 12),
-            Row(
-              children: _difficulties.entries.map((entry) {
-                final isSelected = _selectedDifficulty == entry.key;
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(right: entry.key != 'heavy' ? 8.0 : 0),
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedDifficulty = entry.key),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: isSelected ? theme.colorScheme.primaryContainer : theme.scaffoldBackgroundColor,
-                          border: Border.all(
-                            color: isSelected ? theme.primaryColor : theme.dividerColor, width: 1.5),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(entry.value,
-                          style: TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600,
-                            color: isSelected ? theme.primaryColor : theme.textTheme.bodyMedium?.color,
-                          )),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOptimalWindowHero(BuildContext context) {
-    final appState = context.watch<AppState>();
-    // API teammate: populate appState.peakFocusHours and this will update
-    final peakHour = appState.peakFocusHours.isNotEmpty ? appState.peakFocusHours.first : 10;
-    final now = DateTime.now();
-    final isInPeak = appState.peakFocusHours.contains(now.hour);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF4F6F57), Color(0xFF6B8F71)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-      ),
+  Widget _buildTaskTypeCard(BuildContext context, ThemeData theme, bool isDark) {
+    return _IntentCard(
+      isDark: isDark,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('OPTIMAL WINDOW',
-            style: TextStyle(fontSize: 11, color: Colors.white70, fontFamily: 'DM Mono', letterSpacing: 1.5)),
-          const SizedBox(height: 8),
-          Text(isInPeak ? 'Right now ✓' : '$peakHour:00 today',
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -1)),
-          const SizedBox(height: 6),
-          Text(
-            isInPeak
-                ? "You're in a peak ultradian phase. Best window starts immediately."
-                : "Your peak window opens at $peakHour:00. Consider timing your session then.",
-            style: const TextStyle(fontSize: 13, color: Colors.white, height: 1.4)),
+          Text('TASK TYPE', style: theme.textTheme.labelMedium),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8, runSpacing: 8,
+            children: _taskChips.map((chip) => _TaskChip(
+              emoji:      chip['emoji']!,
+              label:      chip['label']!,
+              isSelected: _selectedTask == chip['label'],
+              isDark:     isDark,
+              color:      theme.primaryColor,
+              onTap:      () => setState(() => _selectedTask = chip['label']!),
+            )).toList(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCalendarCheckCard(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Calendar check', style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 8),
-            // API teammate: replace with real calendar context from GET /calendar/context
-            RichText(
-              text: TextSpan(
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 13),
-                children: [
-                  const TextSpan(text: 'Next meeting in '),
-                  TextSpan(text: '2h 36m',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
-                ],
+  // ── INTENT DECLARATION CARD ───────────────────────────────────────────────
+
+  Widget _buildIntentCard(BuildContext context, ThemeData theme, bool isDark) {
+    return _IntentCard(
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('DECLARE YOUR INTENTION', style: theme.textTheme.labelMedium),
+          const SizedBox(height: 14),
+          // NBBS: hard-border textarea
+          TextField(
+            controller: _intentController,
+            maxLines:   4,
+            style:      theme.textTheme.bodyMedium,
+            decoration: InputDecoration(
+              hintText: 'e.g. Fix the JWT token refresh bug and write unit tests…',
+              hintStyle: TextStyle(
+                color: isDark ? FlowTheme.text3Dark : FlowTheme.text3Light,
+                fontSize: 13,
+              ),
+              contentPadding: const EdgeInsets.all(16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDark ? FlowTheme.borderDark : FlowTheme.borderLight,
+                  width: 2,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDark
+                      ? FlowTheme.borderSoftDark
+                      : FlowTheme.borderSoftLight,
+                  width: 1.5,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: theme.primaryColor,
+                  width: 2,
+                ),
               ),
             ),
-            const SizedBox(height: 6),
-            Text('✓ Plenty of uninterrupted time',
-              style: TextStyle(fontSize: 11, color: Theme.of(context).primaryColor, fontWeight: FontWeight.w500)),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Be specific — FLOW will track drift against this intent.',
+            style: theme.textTheme.labelSmall,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildPatternInsightCard(BuildContext context) {
-    final appState = context.watch<AppState>();
+  // ── DURATION CARD ─────────────────────────────────────────────────────────
+
+  Widget _buildDurationCard(BuildContext context, ThemeData theme, bool isDark) {
+    return _IntentCard(
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('TARGET DURATION', style: theme.textTheme.labelMedium),
+          const SizedBox(height: 14),
+          Row(
+            children: _durations.map((dur) {
+              final isSelected = _selectedDuration == dur;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                      right: dur != _durations.last ? 8.0 : 0),
+                  child: GestureDetector(
+                    onTap: () => setState(() => _selectedDuration = dur),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 130),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: isSelected ? theme.primaryColor : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected
+                              ? (isDark
+                                  ? FlowTheme.borderDark
+                                  : FlowTheme.borderLight)
+                              : (isDark
+                                  ? FlowTheme.borderSoftDark
+                                  : FlowTheme.borderSoftLight),
+                          width: isSelected ? 2 : 1.5,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        dur,
+                        style: TextStyle(
+                          fontFamily:  'DM Mono',
+                          fontSize:    13,
+                          fontWeight:  FontWeight.w700,
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark
+                                  ? FlowTheme.text2Dark
+                                  : FlowTheme.text2Light),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── DIFFICULTY CARD ───────────────────────────────────────────────────────
+
+  Widget _buildDifficultyCard(BuildContext context, ThemeData theme, bool isDark) {
+    return _IntentCard(
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('COGNITIVE LOAD', style: theme.textTheme.labelMedium),
+          const SizedBox(height: 14),
+          Row(
+            children: _difficulties.entries.map((entry) {
+              final isSelected = _selectedDifficulty == entry.key;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                      right: entry.key != 'heavy' ? 8.0 : 0),
+                  child: GestureDetector(
+                    onTap: () =>
+                        setState(() => _selectedDifficulty = entry.key),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 130),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: isSelected ? theme.primaryColor : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected
+                              ? (isDark
+                                  ? FlowTheme.borderDark
+                                  : FlowTheme.borderLight)
+                              : (isDark
+                                  ? FlowTheme.borderSoftDark
+                                  : FlowTheme.borderSoftLight),
+                          width: isSelected ? 2 : 1.5,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        entry.value,
+                        style: TextStyle(
+                          fontSize:   13,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark
+                                  ? FlowTheme.text2Dark
+                                  : FlowTheme.text2Light),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── OPTIMAL WINDOW HERO ───────────────────────────────────────────────────
+  // Gradient → solid primary fill + hard border (NBBS)
+
+  Widget _buildOptimalWindowHero(BuildContext context, ThemeData theme, bool isDark) {
+    final appState  = context.watch<AppState>();
+    final peakHour  = appState.peakFocusHours.isNotEmpty
+        ? appState.peakFocusHours.first
+        : 10;
+    final now       = DateTime.now();
+    final isInPeak  = appState.peakFocusHours.contains(now.hour);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.primaryColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? FlowTheme.borderDark : FlowTheme.borderLight,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'OPTIMAL WINDOW',
+            style: TextStyle(
+              fontFamily:    'DM Mono',
+              fontSize:      10,
+              color:         Colors.white70,
+              letterSpacing: 1.5,
+              fontWeight:    FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            isInPeak ? 'Right now ✓' : '$peakHour:00 today',
+            style: const TextStyle(
+              fontFamily:    'DM Mono',
+              fontSize:      32,
+              fontWeight:    FontWeight.w800,
+              color:         Colors.white,
+              letterSpacing: -1.5,
+              height:        1.0,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            isInPeak
+                ? "You're in a peak ultradian phase. Best window starts immediately."
+                : "Your peak window opens at $peakHour:00. Consider timing your session then.",
+            style: const TextStyle(
+              fontSize: 13,
+              color:    Colors.white,
+              height:   1.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── RIGHT COLUMN CARDS ────────────────────────────────────────────────────
+
+  Widget _buildCalendarCheckCard(BuildContext context, ThemeData theme, bool isDark) {
+    return _IntentCard(
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('CALENDAR CHECK', style: theme.textTheme.labelMedium),
+          const SizedBox(height: 10),
+          // API teammate: replace with GET /calendar/context
+          RichText(
+            text: TextSpan(
+              style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
+              children: [
+                const TextSpan(text: 'Next meeting in '),
+                TextSpan(
+                  text: '2h 36m',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'DM Mono',
+                    color:      isDark ? FlowTheme.text1Dark : FlowTheme.text1Light,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                width: 6, height: 6,
+                decoration: BoxDecoration(
+                  color:  theme.primaryColor,
+                  shape:  BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Plenty of uninterrupted time',
+                style: TextStyle(
+                  fontSize:   11,
+                  fontWeight: FontWeight.w600,
+                  color:      theme.primaryColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPatternInsightCard(BuildContext context, ThemeData theme, bool isDark) {
+    final appState  = context.watch<AppState>();
     final peakHours = appState.peakFocusHours.isNotEmpty
         ? appState.peakFocusHours.take(2).map((h) => '$h:00').join('–')
         : '9:00–11:00';
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Your pattern says', style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
+    return _IntentCard(
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('YOUR PATTERN SAYS', style: theme.textTheme.labelMedium),
+          const SizedBox(height: 12),
+          // Accent bar row — NBBS structural detail
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.primaryColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: theme.primaryColor.withValues(alpha: 0.2),
+                width: 1,
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36, height: 36,
-                    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(10)),
-                    alignment: Alignment.center,
-                    child: const Text('🔬', style: TextStyle(fontSize: 20)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Peak hours: $peakHours',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                            color: Theme.of(context).textTheme.bodyLarge?.color)),
-                        Text('${appState.ultradianCycleMinutes}min ultradian cycle',
-                          style: Theme.of(context).textTheme.labelSmall),
-                      ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(
+                    color:         isDark ? FlowTheme.surfaceDark : FlowTheme.surfaceLight,
+                    borderRadius:  BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDark
+                          ? FlowTheme.borderSoftDark
+                          : FlowTheme.borderSoftLight,
+                      width: 1,
                     ),
                   ),
-                ],
+                  alignment: Alignment.center,
+                  child: const Text('🔬', style: TextStyle(fontSize: 18)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Peak hours: $peakHours',
+                        style: TextStyle(
+                          fontSize:   12,
+                          fontWeight: FontWeight.w700,
+                          color:      isDark
+                              ? FlowTheme.text1Dark
+                              : FlowTheme.text1Light,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${appState.ultradianCycleMinutes}min ultradian cycle',
+                        style: theme.textTheme.labelSmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentIntentionsCard(BuildContext context, ThemeData theme, bool isDark) {
+    return _IntentCard(
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('RECENT INTENTIONS', style: theme.textTheme.labelMedium),
+          const SizedBox(height: 12),
+          // API teammate: populate from session history
+          _RecentTaskItem(
+              text: '🐛 Debug auth module', isDark: isDark, theme: theme),
+          const SizedBox(height: 6),
+          _RecentTaskItem(
+              text: '📝 Write engineering spec', isDark: isDark, theme: theme),
+          const SizedBox(height: 6),
+          _RecentTaskItem(
+              text: '🎨 UI component design', isDark: isDark, theme: theme),
+        ],
+      ),
+    );
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PRIVATE COMPONENTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/// Base card — soft border, 12px radius
+class _IntentCard extends StatelessWidget {
+  final Widget child;
+  final bool   isDark;
+
+  const _IntentCard({required this.child, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isDark ? FlowTheme.surfaceDark : FlowTheme.surfaceLight,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? FlowTheme.borderSoftDark : FlowTheme.borderSoftLight,
+          width: 1.5,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Task chip — NBBS: hard border on selected, no pill radius
+class _TaskChip extends StatelessWidget {
+  final String       emoji;
+  final String       label;
+  final bool         isSelected;
+  final bool         isDark;
+  final Color        color;
+  final VoidCallback onTap;
+
+  const _TaskChip({
+    required this.emoji,
+    required this.label,
+    required this.isSelected,
+    required this.isDark,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 130),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected
+                ? (isDark ? FlowTheme.borderDark : FlowTheme.borderLight)
+                : (isDark ? FlowTheme.borderSoftDark : FlowTheme.borderSoftLight),
+            width: isSelected ? 2 : 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 13)),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize:   12,
+                fontWeight: FontWeight.w600,
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? FlowTheme.text2Dark : FlowTheme.text2Light),
               ),
             ),
           ],
@@ -404,66 +682,40 @@ class _IntentScreenState extends State<IntentScreen> {
       ),
     );
   }
+}
 
-  Widget _buildRecentIntentionsCard(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Recent intentions', style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 10),
-            // API teammate: populate from session history
-            _buildRecentTaskItem(context, '🐛 Debug auth module'),
-            const SizedBox(height: 6),
-            _buildRecentTaskItem(context, '📝 Write engineering spec'),
-            const SizedBox(height: 6),
-            _buildRecentTaskItem(context, '🎨 UI component design'),
-          ],
-        ),
-      ),
-    );
-  }
+/// Recent task row — soft tinted background
+class _RecentTaskItem extends StatelessWidget {
+  final String    text;
+  final bool      isDark;
+  final ThemeData theme;
 
-  Widget _buildChip(BuildContext context, {required String emoji, required String label,
-      required bool isSelected, required VoidCallback onTap}) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primaryContainer : theme.scaffoldBackgroundColor,
-          border: Border.all(color: isSelected ? theme.primaryColor : theme.dividerColor, width: 1.5),
-          borderRadius: BorderRadius.circular(100),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 14)),
-            const SizedBox(width: 6),
-            Text(label,
-              style: TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w600,
-                color: isSelected ? theme.primaryColor : theme.textTheme.bodyMedium?.color)),
-          ],
-        ),
-      ),
-    );
-  }
+  const _RecentTaskItem({
+    required this.text,
+    required this.isDark,
+    required this.theme,
+  });
 
-  Widget _buildRecentTaskItem(BuildContext context, String text) {
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(12),
+        color: isDark ? FlowTheme.elevatedDark : FlowTheme.elevatedLight,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? FlowTheme.borderSoftDark : FlowTheme.borderSoftLight,
+          width: 1,
+        ),
       ),
-      child: Text(text,
-        style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color)),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          color:    isDark ? FlowTheme.text2Dark : FlowTheme.text2Light,
+        ),
+      ),
     );
   }
 }

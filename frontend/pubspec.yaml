@@ -14,8 +14,8 @@ dependencies:
   cupertino_icons: ^1.0.6
 
   # Native Desktop Window Management
-  window_manager: ^0.4.0 
-  
+  window_manager: ^0.4.0
+
   # Network requests to FastAPI Backend
   http: ^1.2.0
   provider: ^6.1.5+1
@@ -28,14 +28,20 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # ─── PREMIUM TYPOGRAPHY ──────────────────────────────────────────
-  # fonts:
-  #   - family: Inter
-  #     fonts:
-  #       - asset: assets/fonts/Inter-Regular.ttf
-  #       - asset: assets/fonts/Inter-Medium.ttf
-  #         weight: 500
-  #       - asset: assets/fonts/Inter-SemiBold.ttf
-  #         weight: 600
-  #       - asset: assets/fonts/Inter-Bold.ttf
-  #         weight: 700
+  # ─── TYPOGRAPHY ──────────────────────────────────────────────────────────────
+  fonts:
+    # Inter Variable — covers all weights (100–900) + optical sizing in 2 files
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-VariableFont_opsz,wght.ttf
+        - asset: assets/fonts/Inter-Italic-VariableFont_opsz,wght.ttf
+          style: italic
+
+    # DM Mono — telemetry readouts, labels, badges, timers
+    - family: DM Mono
+      fonts:
+        - asset: assets/fonts/DMMono-Regular.ttf
+        - asset: assets/fonts/DMMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/DMMono-Italic.ttf
+          style: italic
