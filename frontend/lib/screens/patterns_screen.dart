@@ -1,0 +1,455 @@
+import 'package:flutter/material.dart';
+import 'dart:math';
+
+class PatternsScreen extends StatefulWidget {
+  const PatternsScreen({super.key});
+
+  @override
+  State<PatternsScreen> createState() => _PatternsScreenState();
+}
+
+class _PatternsScreenState extends State<PatternsScreen> {
+  String _selectedPeriod = 'Week';
+  final List<double> _heatmapData = List.generate(28, (index) => Random().nextDouble());
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent, // ✅ Lets the AppShell mesh show through
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTopBar(context),
+            const SizedBox(height: 24),
+            
+            // ✅ FIX: Wrapped in a SizedBox. This gives the Expanded widgets inside 
+            // the Row and the Columns an exact height to calculate against, stopping the "Infinite Height" crash!
+            SizedBox(
+              height: 320, 
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(flex: 3, child: _buildPeakHoursChart(context)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      children: [
+                        Expanded(child: _buildCycleCard(context)),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(child: _buildStatPill(context, "4.2", "Daily sessions")),
+                            const SizedBox(width: 8),
+                            Expanded(child: _buildStatPill(context, "14%", "Avg drift", isWarning: true)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            _buildInsightsCard(context),
+            const SizedBox(height: 14),
+            _buildHeatmapCard(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("YOUR COGNITIVE PROFILE",
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6))), // ✅ Dynamic theme color
+            const SizedBox(height: 2),
+            Text("Patterns & Insights", style: theme.textTheme.headlineLarge),
+          ],
+        ),
+        Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(color: theme.dividerColor),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: ['Week', 'Month', 'All'].map((period) {
+              final isSelected = _selectedPeriod == period;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedPeriod = period),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? theme.cardColor : Colors.transparent,
+                    borderRadius: BorderRadius.circular(100),
+                    boxShadow: isSelected
+                        ? [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))]
+                        : [],
+                  ),
+                  child: Text(period,
+                      style: TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w600,
+                        color: isSelected ? theme.textTheme.bodyLarge?.color : theme.textTheme.bodySmall?.color,
+                      )),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPeakHoursChart(BuildContext context) {
+    final bars = [0.30, 0.15, 0.10, 0.85, 0.92, 0.78, 0.50, 0.35, 0.70, 0.65, 0.40, 0.20];
+    final hours = ['7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18'];
+    final theme = Theme.of(context);
+    
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: theme.dividerColor, width: 1)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Focus by hour", style: theme.textTheme.headlineSmall),
+                _buildTag(context, "Peak: 9–11 AM", isGreen: true),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(bars.length, (index) {
+                  final h = bars[index];
+                  final isTrough = index == 6;
+                  final color = isTrough ? theme.colorScheme.secondary : theme.primaryColor;
+                  final opacity = h > 0.7 ? 0.9 : (h > 0.4 ? 0.5 : 0.3);
+                  
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: FractionallySizedBox(
+                              heightFactor: h,
+                              child: Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: opacity),
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(hours[index], style: theme.textTheme.labelSmall),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCycleCard(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4F6F57), Color(0xFF6B8F71)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("PERSONAL CYCLE", style: TextStyle(fontSize: 11, color: Colors.white70, fontFamily: 'DM Mono', letterSpacing: 1.5)),
+          SizedBox(height: 4),
+          Text.rich(TextSpan(children: [
+            TextSpan(text: "92 ", style: TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -2)),
+            TextSpan(text: "min", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
+          ])),
+          SizedBox(height: 2),
+          Text("Your avg ultradian period", style: TextStyle(fontSize: 12, color: Colors.white70)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatPill(BuildContext context, String value, String label, {bool isWarning = false}) {
+    final theme = Theme.of(context);
+    final bgColor = isWarning ? theme.colorScheme.error.withValues(alpha: 0.1) : theme.primaryColor.withValues(alpha: 0.1);
+    final valColor = isWarning ? theme.colorScheme.error : theme.primaryColor;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: valColor, letterSpacing: -0.5)),
+          const SizedBox(height: 4),
+          Text(label.toUpperCase(), style: theme.textTheme.labelSmall),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsightsCard(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: theme.dividerColor, width: 1)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("AI insights this week", style: theme.textTheme.headlineSmall),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: theme.primaryColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(100)),
+                  child: Text("↑ 3 new", style: theme.textTheme.labelLarge?.copyWith(color: theme.primaryColor, fontSize: 10)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _buildInsightItem(context, "🌅", "Morning dominance confirmed", "87% avg focus score 9–11 AM · 7 consecutive days", "Pattern", "green"),
+            const SizedBox(height: 8),
+            _buildInsightItem(context, "😴", "Post-lunch dip at 13:30", "Consistent trough, avg 41% focus · schedule breaks here", "Warning", "orange"),
+            const SizedBox(height: 8),
+            _buildInsightItem(context, "📱", "Slack causes 68% of drifts", "Avg 8.3 context switches per session via Slack", "Action needed", "rose"),
+            const SizedBox(height: 8),
+            _buildInsightItem(context, "💪", "Deep work up 23% this week", "2h 14m avg daily vs 1h 49m last week", "Progress", "green"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInsightItem(BuildContext context, String emoji, String title, String sub, String tag, String type) {
+    final theme = Theme.of(context);
+    
+    // ✅ Dynamic Semantic Colors instead of hardcoded strings
+    Color bgColor = theme.primaryColor.withValues(alpha: 0.05);
+    if (type == "orange") bgColor = theme.colorScheme.secondary.withValues(alpha: 0.1);
+    if (type == "rose") bgColor = theme.colorScheme.error.withValues(alpha: 0.1);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20)),
+      child: Row(
+        children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(10)),
+            alignment: Alignment.center,
+            child: Text(emoji, style: const TextStyle(fontSize: 20)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: theme.textTheme.bodyLarge?.color)),
+                Text(sub, style: theme.textTheme.labelSmall),
+              ],
+            ),
+          ),
+          _buildTag(context, tag, isGreen: type == "green", isOrange: type == "orange", isRose: type == "rose"),
+        ],
+      ),
+    );
+  }
+
+ Widget _buildHeatmapCard(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: theme.dividerColor)),
+      child: Padding(
+        padding: const EdgeInsets.all(32), // Increased padding for premium feel
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ─── LEFT SIDE: THE HEATMAP ───
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Focus heatmap — last 28 days", style: theme.textTheme.headlineSmall),
+                  const SizedBox(height: 24),
+                  
+                  // ✅ FIX: Constraining the width stops the boxes from becoming gigantic!
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 450),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 7, 
+                        crossAxisSpacing: 8, // Added more breathing room between boxes
+                        mainAxisSpacing: 8, 
+                        childAspectRatio: 1,
+                      ),
+                      itemCount: 28,
+                      itemBuilder: (context, index) {
+                        final val = _heatmapData[index];
+                        double opacity = 0.1;
+                        if (val > 0.8) { opacity = 1.0; }
+                        else if (val > 0.6) { opacity = 0.8; }
+                        else if (val > 0.4) { opacity = 0.5; }
+                        else if (val > 0.2) { opacity = 0.3; }
+                        
+                        // ✅ FIX: Added Tooltips for hover-interactions!
+                        return Tooltip(
+                          message: "Day ${index + 1}: ${(val * 100).toInt()}% Focus",
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.onSurface,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          textStyle: TextStyle(color: theme.colorScheme.surface, fontSize: 12),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: theme.primaryColor.withValues(alpha: opacity),
+                              borderRadius: BorderRadius.circular(8),
+                              // Added a subtle border so even empty days have definition
+                              border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5), width: 1),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Legend
+                  Row(
+                    children: [
+                      Text("LESS", style: theme.textTheme.labelSmall),
+                      const SizedBox(width: 8),
+                      _buildLegendBox(0.1, theme), 
+                      _buildLegendBox(0.3, theme), 
+                      _buildLegendBox(0.5, theme), 
+                      _buildLegendBox(0.8, theme), 
+                      _buildLegendBox(1.0, theme),
+                      const SizedBox(width: 8),
+                      Text("MORE", style: theme.textTheme.labelSmall),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(width: 48), // Spacing between graph and stats
+            
+            // ─── RIGHT SIDE: DENSITY METRICS ───
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("CONSISTENCY METRICS", style: theme.textTheme.labelMedium),
+                  const SizedBox(height: 24),
+                  _buildHeatmapStatRow("Best Day", "Wednesday", "Avg 88% focus", theme),
+                  Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(color: theme.dividerColor)),
+                  _buildHeatmapStatRow("Deep Work", "42 hrs", "Top 5% of users", theme),
+                  Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(color: theme.dividerColor)),
+                  _buildHeatmapStatRow("Longest Streak", "12 Days", "March 12 - March 24", theme),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper for the new right-side metrics
+  Widget _buildHeatmapStatRow(String label, String value, String sub, ThemeData theme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(label, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(value, style: theme.textTheme.headlineSmall?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 2),
+            Text(sub, style: theme.textTheme.labelSmall),
+          ],
+        )
+      ],
+    );
+  }
+
+  // Updated Legend Box to accept the theme safely
+  Widget _buildLegendBox(double opacity, ThemeData theme) {
+    return Container(
+      width: 12, height: 12, // Slightly larger legend boxes
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      decoration: BoxDecoration(
+        color: theme.primaryColor.withValues(alpha: opacity),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5), width: 1),
+      ),
+    );
+  }
+
+  Widget _buildTag(BuildContext context, String text, {bool isGreen = false, bool isOrange = false, bool isRose = false}) {
+    final theme = Theme.of(context);
+    
+    // ✅ Dynamic Tag Colors
+    Color bgColor = theme.primaryColor.withValues(alpha: 0.15);
+    Color textColor = theme.primaryColor;
+    
+    if (isOrange) {
+      bgColor = theme.colorScheme.secondary.withValues(alpha: 0.15);
+      textColor = theme.colorScheme.secondary;
+    } else if (isRose) {
+      bgColor = theme.colorScheme.error.withValues(alpha: 0.15);
+      textColor = theme.colorScheme.error;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(100)),
+      child: Text(text, style: theme.textTheme.labelLarge?.copyWith(color: textColor, fontSize: 11)),
+    );
+  }
+}
