@@ -1,5 +1,19 @@
+// lib/screens/patterns_screen.dart
+//
+// NBBS v2 Lite rebuild:
+//   ✅ Card → Container + soft border (borderSoftLight/Dark), 12px radius
+//   ✅ Cycle hero: gradient → solid primary fill + hard 2px border
+//   ✅ Period selector: pill → 8px square toggle, hard border on selected
+//   ✅ Tags: pill radius → 6px, semantic colors (blue/amber/red)
+//   ✅ Stat pills: rounded → 8px radius, hard border, NBBS fill
+//   ✅ Insight items: soft border, left accent bar instead of tinted fill
+//   ✅ Heatmap: dividerColor → borderSoftLight/Dark borders
+//   ✅ Bar chart: DM Mono labels, NBBS semantic bar colors
+//   ✅ All AppState-safe patterns preserved
+
 import 'package:flutter/material.dart';
 import 'dart:math';
+import '../core/theme.dart';
 
 class PatternsScreen extends StatefulWidget {
   const PatternsScreen({super.key});
@@ -10,40 +24,42 @@ class PatternsScreen extends StatefulWidget {
 
 class _PatternsScreenState extends State<PatternsScreen> {
   String _selectedPeriod = 'Week';
-  final List<double> _heatmapData = List.generate(28, (index) => Random().nextDouble());
+  final List<double> _heatmapData =
+      List.generate(28, (index) => Random().nextDouble());
 
   @override
   Widget build(BuildContext context) {
+    final theme  = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.transparent, // ✅ Lets the AppShell mesh show through
+      backgroundColor: Colors.transparent,
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTopBar(context),
+            _buildTopBar(context, theme, isDark),
             const SizedBox(height: 24),
-            
-            // ✅ FIX: Wrapped in a SizedBox. This gives the Expanded widgets inside 
-            // the Row and the Columns an exact height to calculate against, stopping the "Infinite Height" crash!
+
             SizedBox(
-              height: 320, 
+              height: 320,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(flex: 3, child: _buildPeakHoursChart(context)),
+                  Expanded(flex: 3, child: _buildPeakHoursChart(context, theme, isDark)),
                   const SizedBox(width: 14),
                   Expanded(
                     flex: 2,
                     child: Column(
                       children: [
-                        Expanded(child: _buildCycleCard(context)),
+                        Expanded(child: _buildCycleHero(context, theme, isDark)),
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Expanded(child: _buildStatPill(context, "4.2", "Daily sessions")),
+                            Expanded(child: _buildStatPill(context, theme, isDark, '4.2', 'Daily sessions', state: SessionState.focus)),
                             const SizedBox(width: 8),
-                            Expanded(child: _buildStatPill(context, "14%", "Avg drift", isWarning: true)),
+                            Expanded(child: _buildStatPill(context, theme, isDark, '14%', 'Avg drift', state: SessionState.drift)),
                           ],
                         ),
                       ],
@@ -52,38 +68,44 @@ class _PatternsScreenState extends State<PatternsScreen> {
                 ],
               ),
             ),
+
             const SizedBox(height: 14),
-            _buildInsightsCard(context),
+            _buildInsightsCard(context, theme, isDark),
             const SizedBox(height: 14),
-            _buildHeatmapCard(context),
+            _buildHeatmapCard(context, theme, isDark),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
-    final theme = Theme.of(context);
-    
+  // ── TOP BAR ───────────────────────────────────────────────────────────────
+
+  Widget _buildTopBar(BuildContext context, ThemeData theme, bool isDark) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("YOUR COGNITIVE PROFILE",
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6))), // ✅ Dynamic theme color
+            Text(
+              'YOUR COGNITIVE PROFILE',
+              style: theme.textTheme.labelMedium,
+            ),
             const SizedBox(height: 2),
-            Text("Patterns & Insights", style: theme.textTheme.headlineLarge),
+            Text('Patterns & Insights', style: theme.textTheme.headlineLarge),
           ],
         ),
+        // Period toggle — NBBS: square 8px, hard border on selected
         Container(
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor,
-            borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: theme.dividerColor),
+            color:        isDark ? FlowTheme.surfaceDark : FlowTheme.surfaceLight,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isDark ? FlowTheme.borderSoftDark : FlowTheme.borderSoftLight,
+              width: 1.5,
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -91,20 +113,32 @@ class _PatternsScreenState extends State<PatternsScreen> {
               final isSelected = _selectedPeriod == period;
               return GestureDetector(
                 onTap: () => setState(() => _selectedPeriod = period),
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 130),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? theme.cardColor : Colors.transparent,
-                    borderRadius: BorderRadius.circular(100),
-                    boxShadow: isSelected
-                        ? [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))]
-                        : [],
+                    color: isSelected ? theme.primaryColor : Colors.transparent,
+                    borderRadius: BorderRadius.circular(7),
+                    border: isSelected
+                        ? Border.all(
+                            color: isDark
+                                ? FlowTheme.borderDark
+                                : FlowTheme.borderLight,
+                            width: 2,
+                          )
+                        : null,
                   ),
-                  child: Text(period,
-                      style: TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w600,
-                        color: isSelected ? theme.textTheme.bodyLarge?.color : theme.textTheme.bodySmall?.color,
-                      )),
+                  child: Text(
+                    period,
+                    style: TextStyle(
+                      fontFamily:  'DM Mono',
+                      fontSize:    12,
+                      fontWeight:  FontWeight.w600,
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark ? FlowTheme.text2Dark : FlowTheme.text2Light),
+                    ),
+                  ),
                 ),
               );
             }).toList(),
@@ -114,342 +148,507 @@ class _PatternsScreenState extends State<PatternsScreen> {
     );
   }
 
-  Widget _buildPeakHoursChart(BuildContext context) {
-    final bars = [0.30, 0.15, 0.10, 0.85, 0.92, 0.78, 0.50, 0.35, 0.70, 0.65, 0.40, 0.20];
-    final hours = ['7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18'];
-    final theme = Theme.of(context);
-    
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: theme.dividerColor, width: 1)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Focus by hour", style: theme.textTheme.headlineSmall),
-                _buildTag(context, "Peak: 9–11 AM", isGreen: true),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: List.generate(bars.length, (index) {
-                  final h = bars[index];
-                  final isTrough = index == 6;
-                  final color = isTrough ? theme.colorScheme.secondary : theme.primaryColor;
-                  final opacity = h > 0.7 ? 0.9 : (h > 0.4 ? 0.5 : 0.3);
-                  
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1.5),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Flexible(
-                            child: FractionallySizedBox(
-                              heightFactor: h,
-                              child: Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: color.withValues(alpha: opacity),
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                                ),
+  // ── PEAK HOURS CHART ──────────────────────────────────────────────────────
+
+  Widget _buildPeakHoursChart(BuildContext context, ThemeData theme, bool isDark) {
+    final bars  = [0.30, 0.15, 0.10, 0.85, 0.92, 0.78, 0.50, 0.35, 0.70, 0.65, 0.40, 0.20];
+    final hours = ['7',  '8',  '9',  '10', '11', '12', '13', '14', '15', '16', '17', '18'];
+
+    return _PatternCard(
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Focus by hour', style: theme.textTheme.headlineSmall),
+              _buildTag(context, theme, isDark, 'Peak: 9–11 AM', state: SessionState.focus),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(bars.length, (index) {
+                final h       = bars[index];
+                final isTrough = index == 6;
+                final color   = isTrough ? FlowTheme.stateColor(context, SessionState.trough)
+                                         : FlowTheme.stateColor(context, SessionState.focus);
+                final opacity = h > 0.7 ? 0.9 : (h > 0.4 ? 0.55 : 0.3);
+
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Flexible(
+                          child: FractionallySizedBox(
+                            heightFactor: h,
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: opacity),
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(3)),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          Text(hours[index], style: theme.textTheme.labelSmall),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          hours[index],
+                          style: TextStyle(
+                            fontFamily: 'DM Mono',
+                            fontSize:   9,
+                            color: isDark ? FlowTheme.text3Dark : FlowTheme.text3Light,
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                }),
-              ),
+                  ),
+                );
+              }),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildCycleCard(BuildContext context) {
+  // ── CYCLE HERO — gradient → solid primary fill + hard 2px border ──────────
+
+  Widget _buildCycleHero(BuildContext context, ThemeData theme, bool isDark) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF4F6F57), Color(0xFF6B8F71)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color:        theme.primaryColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? FlowTheme.borderDark : FlowTheme.borderLight,
+          width: 2,
         ),
-        borderRadius: BorderRadius.circular(20),
       ),
       child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment:  CrossAxisAlignment.start,
+        mainAxisAlignment:   MainAxisAlignment.center,
         children: [
-          Text("PERSONAL CYCLE", style: TextStyle(fontSize: 11, color: Colors.white70, fontFamily: 'DM Mono', letterSpacing: 1.5)),
-          SizedBox(height: 4),
+          Text(
+            'PERSONAL CYCLE',
+            style: TextStyle(
+              fontFamily:    'DM Mono',
+              fontSize:      10,
+              color:         Colors.white70,
+              letterSpacing: 1.5,
+              fontWeight:    FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 6),
           Text.rich(TextSpan(children: [
-            TextSpan(text: "92 ", style: TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -2)),
-            TextSpan(text: "min", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
+            TextSpan(
+              text:  '92 ',
+              style: TextStyle(
+                fontFamily:    'DM Mono',
+                fontSize:      44,
+                fontWeight:    FontWeight.w800,
+                color:         Colors.white,
+                letterSpacing: -2,
+                height:        1.0,
+              ),
+            ),
+            TextSpan(
+              text:  'min',
+              style: TextStyle(
+                fontFamily: 'DM Mono',
+                fontSize:   18,
+                fontWeight: FontWeight.w800,
+                color:      Colors.white,
+              ),
+            ),
           ])),
-          SizedBox(height: 2),
-          Text("Your avg ultradian period", style: TextStyle(fontSize: 12, color: Colors.white70)),
+          SizedBox(height: 4),
+          Text(
+            'Your avg ultradian period',
+            style: TextStyle(fontSize: 12, color: Colors.white70, height: 1.4),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatPill(BuildContext context, String value, String label, {bool isWarning = false}) {
-    final theme = Theme.of(context);
-    final bgColor = isWarning ? theme.colorScheme.error.withValues(alpha: 0.1) : theme.primaryColor.withValues(alpha: 0.1);
-    final valColor = isWarning ? theme.colorScheme.error : theme.primaryColor;
-    
+  // ── STAT PILL ─────────────────────────────────────────────────────────────
+
+  Widget _buildStatPill(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    String value,
+    String label, {
+    required SessionState state,
+  }) {
+    final accent = FlowTheme.stateColor(context, state);
+    final soft   = FlowTheme.stateSoftColor(context, state);
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color:        soft,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: accent.withValues(alpha: 0.4),
+          width: 1.5,
+        ),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: valColor, letterSpacing: -0.5)),
+          Text(
+            value,
+            style: TextStyle(
+              fontFamily:    'DM Mono',
+              fontSize:      22,
+              fontWeight:    FontWeight.w800,
+              color:         accent,
+              letterSpacing: -0.5,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label.toUpperCase(), style: theme.textTheme.labelSmall),
+          Text(
+            label.toUpperCase(),
+            style: theme.textTheme.labelSmall,
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildInsightsCard(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: theme.dividerColor, width: 1)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("AI insights this week", style: theme.textTheme.headlineSmall),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: theme.primaryColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(100)),
-                  child: Text("↑ 3 new", style: theme.textTheme.labelLarge?.copyWith(color: theme.primaryColor, fontSize: 10)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _buildInsightItem(context, "🌅", "Morning dominance confirmed", "87% avg focus score 9–11 AM · 7 consecutive days", "Pattern", "green"),
-            const SizedBox(height: 8),
-            _buildInsightItem(context, "😴", "Post-lunch dip at 13:30", "Consistent trough, avg 41% focus · schedule breaks here", "Warning", "orange"),
-            const SizedBox(height: 8),
-            _buildInsightItem(context, "📱", "Slack causes 68% of drifts", "Avg 8.3 context switches per session via Slack", "Action needed", "rose"),
-            const SizedBox(height: 8),
-            _buildInsightItem(context, "💪", "Deep work up 23% this week", "2h 14m avg daily vs 1h 49m last week", "Progress", "green"),
-          ],
-        ),
+  // ── INSIGHTS CARD ─────────────────────────────────────────────────────────
+
+  Widget _buildInsightsCard(BuildContext context, ThemeData theme, bool isDark) {
+    return _PatternCard(
+      isDark: isDark,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('AI insights this week', style: theme.textTheme.headlineSmall),
+              _buildTag(context, theme, isDark, '↑ 3 new', state: SessionState.focus),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildInsightItem(context, theme, isDark, '🌅',
+              'Morning dominance confirmed',
+              '87% avg focus 9–11 AM · 7 consecutive days',
+              'Pattern', SessionState.focus),
+          const SizedBox(height: 8),
+          _buildInsightItem(context, theme, isDark, '😴',
+              'Post-lunch dip at 13:30',
+              'Consistent trough, avg 41% focus · schedule breaks here',
+              'Warning', SessionState.trough),
+          const SizedBox(height: 8),
+          _buildInsightItem(context, theme, isDark, '📱',
+              'Slack causes 68% of drifts',
+              'Avg 8.3 context switches per session via Slack',
+              'Action needed', SessionState.drift),
+          const SizedBox(height: 8),
+          _buildInsightItem(context, theme, isDark, '💪',
+              'Deep work up 23% this week',
+              '2h 14m avg daily vs 1h 49m last week',
+              'Progress', SessionState.focus),
+        ],
       ),
     );
   }
 
-  Widget _buildInsightItem(BuildContext context, String emoji, String title, String sub, String tag, String type) {
-    final theme = Theme.of(context);
-    
-    // ✅ Dynamic Semantic Colors instead of hardcoded strings
-    Color bgColor = theme.primaryColor.withValues(alpha: 0.05);
-    if (type == "orange") bgColor = theme.colorScheme.secondary.withValues(alpha: 0.1);
-    if (type == "rose") bgColor = theme.colorScheme.error.withValues(alpha: 0.1);
-    
+  Widget _buildInsightItem(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    String emoji,
+    String title,
+    String sub,
+    String tag,
+    SessionState state,
+  ) {
+    final accent = FlowTheme.stateColor(context, state);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color:        isDark ? FlowTheme.elevatedDark : FlowTheme.elevatedLight,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? FlowTheme.borderSoftDark : FlowTheme.borderSoftLight,
+          width: 1.5,
+        ),
+      ),
       child: Row(
         children: [
+          // Left accent bar
+          Container(
+            width: 3,
+            height: 36,
+            decoration: BoxDecoration(
+              color:        accent,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 12),
           Container(
             width: 36, height: 36,
-            decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              color:        isDark ? FlowTheme.surfaceDark : FlowTheme.surfaceLight,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDark ? FlowTheme.borderSoftDark : FlowTheme.borderSoftLight,
+                width: 1,
+              ),
+            ),
             alignment: Alignment.center,
-            child: Text(emoji, style: const TextStyle(fontSize: 20)),
+            child: Text(emoji, style: const TextStyle(fontSize: 18)),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: theme.textTheme.bodyLarge?.color)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize:   12,
+                    fontWeight: FontWeight.w700,
+                    color:      isDark ? FlowTheme.text1Dark : FlowTheme.text1Light,
+                  ),
+                ),
+                const SizedBox(height: 2),
                 Text(sub, style: theme.textTheme.labelSmall),
               ],
             ),
           ),
-          _buildTag(context, tag, isGreen: type == "green", isOrange: type == "orange", isRose: type == "rose"),
+          const SizedBox(width: 8),
+          _buildTag(context, theme, isDark, tag, state: state),
         ],
       ),
     );
   }
 
- Widget _buildHeatmapCard(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: theme.dividerColor)),
-      child: Padding(
-        padding: const EdgeInsets.all(32), // Increased padding for premium feel
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ─── LEFT SIDE: THE HEATMAP ───
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Focus heatmap — last 28 days", style: theme.textTheme.headlineSmall),
-                  const SizedBox(height: 24),
-                  
-                  // ✅ FIX: Constraining the width stops the boxes from becoming gigantic!
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 450),
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 7, 
-                        crossAxisSpacing: 8, // Added more breathing room between boxes
-                        mainAxisSpacing: 8, 
-                        childAspectRatio: 1,
-                      ),
-                      itemCount: 28,
-                      itemBuilder: (context, index) {
-                        final val = _heatmapData[index];
-                        double opacity = 0.1;
-                        if (val > 0.8) { opacity = 1.0; }
-                        else if (val > 0.6) { opacity = 0.8; }
-                        else if (val > 0.4) { opacity = 0.5; }
-                        else if (val > 0.2) { opacity = 0.3; }
-                        
-                        // ✅ FIX: Added Tooltips for hover-interactions!
-                        return Tooltip(
-                          message: "Day ${index + 1}: ${(val * 100).toInt()}% Focus",
+  // ── HEATMAP CARD ──────────────────────────────────────────────────────────
+
+  Widget _buildHeatmapCard(BuildContext context, ThemeData theme, bool isDark) {
+    return _PatternCard(
+      isDark: isDark,
+      padding: const EdgeInsets.all(28),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left: heatmap grid
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Focus heatmap — last 28 days',
+                    style: theme.textTheme.headlineSmall),
+                const SizedBox(height: 20),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 450),
+                  child: GridView.builder(
+                    shrinkWrap:    true,
+                    physics:       const NeverScrollableScrollPhysics(),
+                    gridDelegate:  const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount:   7,
+                      crossAxisSpacing: 7,
+                      mainAxisSpacing:  7,
+                      childAspectRatio: 1,
+                    ),
+                    itemCount: 28,
+                    itemBuilder: (context, index) {
+                      final val = _heatmapData[index];
+                      double opacity = 0.08;
+                      if      (val > 0.8) opacity = 1.0;
+                      else if (val > 0.6) opacity = 0.75;
+                      else if (val > 0.4) opacity = 0.5;
+                      else if (val > 0.2) opacity = 0.28;
+
+                      return Tooltip(
+                        message: 'Day ${index + 1}: ${(val * 100).toInt()}% Focus',
+                        child: Container(
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.onSurface,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          textStyle: TextStyle(color: theme.colorScheme.surface, fontSize: 12),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: theme.primaryColor.withValues(alpha: opacity),
-                              borderRadius: BorderRadius.circular(8),
-                              // Added a subtle border so even empty days have definition
-                              border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5), width: 1),
+                            color:        theme.primaryColor.withValues(alpha: opacity),
+                            borderRadius: BorderRadius.circular(5),
+                            border: Border.all(
+                              color: isDark
+                                  ? FlowTheme.borderSoftDark
+                                  : FlowTheme.borderSoftLight,
+                              width: 1,
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 20),
-                  
-                  // Legend
-                  Row(
-                    children: [
-                      Text("LESS", style: theme.textTheme.labelSmall),
-                      const SizedBox(width: 8),
-                      _buildLegendBox(0.1, theme), 
-                      _buildLegendBox(0.3, theme), 
-                      _buildLegendBox(0.5, theme), 
-                      _buildLegendBox(0.8, theme), 
-                      _buildLegendBox(1.0, theme),
-                      const SizedBox(width: 8),
-                      Text("MORE", style: theme.textTheme.labelSmall),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                // Legend
+                Row(
+                  children: [
+                    Text('LESS', style: theme.textTheme.labelSmall),
+                    const SizedBox(width: 8),
+                    ...[0.08, 0.28, 0.5, 0.75, 1.0].map((op) => Container(
+                      width:  11,
+                      height: 11,
+                      margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                      decoration: BoxDecoration(
+                        color:        theme.primaryColor.withValues(alpha: op),
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(
+                          color: isDark
+                              ? FlowTheme.borderSoftDark
+                              : FlowTheme.borderSoftLight,
+                          width: 1,
+                        ),
+                      ),
+                    )),
+                    const SizedBox(width: 8),
+                    Text('MORE', style: theme.textTheme.labelSmall),
+                  ],
+                ),
+              ],
             ),
-            
-            const SizedBox(width: 48), // Spacing between graph and stats
-            
-            // ─── RIGHT SIDE: DENSITY METRICS ───
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("CONSISTENCY METRICS", style: theme.textTheme.labelMedium),
-                  const SizedBox(height: 24),
-                  _buildHeatmapStatRow("Best Day", "Wednesday", "Avg 88% focus", theme),
-                  Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(color: theme.dividerColor)),
-                  _buildHeatmapStatRow("Deep Work", "42 hrs", "Top 5% of users", theme),
-                  Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(color: theme.dividerColor)),
-                  _buildHeatmapStatRow("Longest Streak", "12 Days", "March 12 - March 24", theme),
-                ],
-              ),
-            )
-          ],
-        ),
+          ),
+
+          const SizedBox(width: 40),
+
+          // Right: consistency metrics
+          Expanded(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'CONSISTENCY METRICS',
+                  style: theme.textTheme.labelMedium,
+                ),
+                const SizedBox(height: 20),
+                _buildHeatmapStatRow(theme, isDark, 'Best Day',       'Wednesday', 'Avg 88% focus'),
+                _buildDivider(isDark),
+                _buildHeatmapStatRow(theme, isDark, 'Deep Work',      '42 hrs',    'Top 5% of users'),
+                _buildDivider(isDark),
+                _buildHeatmapStatRow(theme, isDark, 'Longest Streak', '12 Days',   'Mar 12 – Mar 24'),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // Helper for the new right-side metrics
-  Widget _buildHeatmapStatRow(String label, String value, String sub, ThemeData theme) {
+  Widget _buildDivider(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Container(
+        height: 1,
+        color:  isDark ? FlowTheme.borderSoftDark : FlowTheme.borderSoftLight,
+      ),
+    );
+  }
+
+  Widget _buildHeatmapStatRow(
+      ThemeData theme, bool isDark, String label, String value, String sub) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(label, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        Text(label,
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w600)),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(value, style: theme.textTheme.headlineSmall?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.w800)),
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily:    'DM Mono',
+                fontSize:      16,
+                fontWeight:    FontWeight.w800,
+                color:         theme.primaryColor,
+                letterSpacing: -0.5,
+              ),
+            ),
             const SizedBox(height: 2),
             Text(sub, style: theme.textTheme.labelSmall),
           ],
-        )
+        ),
       ],
     );
   }
 
-  // Updated Legend Box to accept the theme safely
-  Widget _buildLegendBox(double opacity, ThemeData theme) {
+  // ── SHARED TAG ────────────────────────────────────────────────────────────
+
+  Widget _buildTag(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    String text, {
+    required SessionState state,
+  }) {
+    final accent = FlowTheme.stateColor(context, state);
+    final soft   = FlowTheme.stateSoftColor(context, state);
+
     return Container(
-      width: 12, height: 12, // Slightly larger legend boxes
-      margin: const EdgeInsets.symmetric(horizontal: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: theme.primaryColor.withValues(alpha: opacity),
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5), width: 1),
+        color:        soft,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: 'DM Mono',
+          fontSize:   10,
+          fontWeight: FontWeight.w600,
+          color:      accent,
+        ),
       ),
     );
   }
+}
 
-  Widget _buildTag(BuildContext context, String text, {bool isGreen = false, bool isOrange = false, bool isRose = false}) {
-    final theme = Theme.of(context);
-    
-    // ✅ Dynamic Tag Colors
-    Color bgColor = theme.primaryColor.withValues(alpha: 0.15);
-    Color textColor = theme.primaryColor;
-    
-    if (isOrange) {
-      bgColor = theme.colorScheme.secondary.withValues(alpha: 0.15);
-      textColor = theme.colorScheme.secondary;
-    } else if (isRose) {
-      bgColor = theme.colorScheme.error.withValues(alpha: 0.15);
-      textColor = theme.colorScheme.error;
-    }
-    
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PRIVATE COMPONENTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/// Base informational card — soft border, 12px radius, surface color.
+class _PatternCard extends StatelessWidget {
+  final Widget   child;
+  final bool     isDark;
+  final EdgeInsets? padding;
+
+  const _PatternCard({
+    required this.child,
+    required this.isDark,
+    this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(100)),
-      child: Text(text, style: theme.textTheme.labelLarge?.copyWith(color: textColor, fontSize: 11)),
+      width:   double.infinity,
+      padding: padding ?? const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? FlowTheme.surfaceDark : FlowTheme.surfaceLight,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? FlowTheme.borderSoftDark : FlowTheme.borderSoftLight,
+          width: 1.5,
+        ),
+      ),
+      child: child,
     );
   }
 }
